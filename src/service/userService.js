@@ -37,6 +37,18 @@ class userService {
         if (!user) {
             throw new Error("INVALID_CREDENTIALS")
         }
+        
+
+        const isMatch = await bcrypt.compare(
+            password,
+            user.password_hash
+        )
+
+
+        if (!isMatch) {
+            throw new Error("INVALID_CREDENTIALS");
+        }
+
         const token = jwt.sign(
             {   userId: user.id,
                 role: user.role
@@ -47,15 +59,6 @@ class userService {
             }
         )
 
-        const isMatch = await bcrypt.compare(
-            password,
-            user.password_hash
-        )
-
-        if (!isMatch) {
-            throw new Error("INVALID_CREDENTIALS");
-        }
-
         return {
             token,
             id: user.id,
@@ -65,6 +68,24 @@ class userService {
             role: user.role
         };
     }
+
+
+    async getCurrentUser(userId) {
+        const user = await userRepository.getUserByID(userId)
+
+        if (!user) {
+            throw new Error("USER_NOT_FOUND")
+        }
+        return {
+            id: user.id,
+            name: user.name,
+            username: user.username,
+            role: user.role
+        }
+    }
  }  
+
+
+    
 
 module.exports = new userService()

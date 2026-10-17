@@ -44,6 +44,7 @@ class userController {
         }
     }
 
+
     async loginUser (req, res) {
         try {
             const { email,  password } = req.body
@@ -71,8 +72,33 @@ class userController {
                 message: "Failed to login"
             })
         }
-
-
     }
+
+
+    async getCurrentUser(req, res) {
+        try {
+            const userId = req.user.userId;
+
+            const user = await userService.getCurrentUser(userId);
+
+            return res.status(200).json({
+                user
+            });
+
+        } catch (error) {
+            console.log(error);
+
+            if (error.message === "USER_NOT_FOUND") {
+                return res.status(404).json({
+                    message: "User not found"
+                });
+            }
+
+            return res.status(500).json({
+                message: "Failed to retrieve user"
+            });
+        }
+    }
+
 }
 module.exports = new userController()
