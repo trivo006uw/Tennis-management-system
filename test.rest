@@ -1,10 +1,5 @@
 
-POST http://localhost:3000/players
-Content-Type: application/json
 
-{
-    "user_id": 3
-}
 
 ###
 DELETE http://localhost:3000/players/5
@@ -18,8 +13,51 @@ Content-Type: application/json
 
 {
     "name": "test_player_from_endpoint",
-    "username": "carlosAlc",
-    "email": "carlos@gmail.com",
+    "username": "kevinle253",
+    "email": "kevinle253@gmail.com",
     "password": "123456789@",
     "role": "player"
+}
+
+###
+GET http://localhost:3000/players
+
+###
+POST  http://localhost:3000/players
+Content-Type: application/json
+
+{
+    "user_id": 7
+}
+
+### Update player rating
+PATCH http://localhost:3000/players/7
+Content-Type: application/json
+
+{
+    "rating": 6.7
+}
+
+### Delete player
+DELETE http://localhost:3000/players/3
+
+###
+POST http://localhost:3000/users/register
+Content-Type: application/json
+
+{
+    "name": "JWT Test User",
+    "username": "jwt_test_user_1",
+    "email": "jwt_test_1@example.com",
+    "password": "TestPassword123!"
+}
+
+
+###
+POST http://localhost:3000/users/login
+Content-Type: application/json
+
+{
+    "email": "jwt_test_1@example.com",
+    "password": "TestPassword123!"
 }

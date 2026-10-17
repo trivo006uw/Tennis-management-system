@@ -34,7 +34,8 @@ class playerController {
             console.log(error)
             
             res.status(500).json({
-                message: "Failed to get player"
+                message: "Failed to get player",
+                error: error.message
             })
         }
     }

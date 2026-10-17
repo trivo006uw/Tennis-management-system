@@ -10,10 +10,9 @@ class userController {
                 username,
                 email,
                 password,
-                role
             } = req.body;
 
-            const user = await userService.registerUser(name, username, email, password, role)
+            const user = await userService.registerUser(name, username, email, password)
 
             return res.status(201).json({
                 user
@@ -43,6 +42,37 @@ class userController {
                 message: "Failed to register user"
             });
         }
+    }
+
+    async loginUser (req, res) {
+        try {
+            const { email,  password } = req.body
+            
+            const user = await userService.loginUser(email, password)
+
+            return res.status(200).json(user)
+
+        } catch (error) {
+            console.log(error)
+            
+            if (error.message === "MISSING_REQUIRED_FIELDS") {
+                return res.status(400).json({
+                    message: "Email and password are required"
+            });
+        }
+
+            if (error.message === "INVALID_CREDENTIALS") {
+                return res.status(401).json({
+                    message: "invalid credentials"
+                })
+            }
+            
+            return res.status(500).json({
+                message: "Failed to login"
+            })
+        }
+
+
     }
 }
 module.exports = new userController()

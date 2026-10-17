@@ -22,8 +22,8 @@ class userRepository {
                 role
             )
             VALUES ($1, $2, $3, $4, $5)
-            RETURNING *;`
-            ,[name, username, email, passHash, role]
+             RETURNING id, name, username, email, role, created_at;`,
+            [name, username, email, passHash, role]
             
         )
         return result.rows[0]

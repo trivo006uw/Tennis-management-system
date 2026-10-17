@@ -3,7 +3,6 @@ const userRepository = require("../repositories/userRepository")
 class PlayerService {
     async getAllPlayers () {
         const players = await playerRepository.getAllPlayers();
-
         return players;
     }
     
