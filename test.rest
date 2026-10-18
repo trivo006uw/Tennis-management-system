@@ -64,4 +64,8 @@ Content-Type: application/json
 
 ###
 GET http://localhost:3000/users/me
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjgsInJvbGUiOiJwbGF5ZXIiLCJpYXQiOjE3OTIyNjAzNjcsImV4cCI6MTc5MjI2NzU2N30.vUPPNYTa2UZpQ4sWWKfyvDIgef9cOrT4cAYh73JWtMs
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjgsInJvbGUiOiJwbGF5ZXIiLCJpYXQiOjE3OTIzMDM0NjksImV4cCI6MTc5MjMxMDY2OX0.X1c4Fk-aoixW96bFD-iL6v9gVH0vW727-ntNOqv1Dqw
+
+###
+GET http://localhost:3000/users/admin-test
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjgsInJvbGUiOiJwbGF5ZXIiLCJpYXQiOjE3OTIzMDM0NjksImV4cCI6MTc5MjMxMDY2OX0.X1c4Fk-aoixW96bFD-iL6v9gVH0vW727-ntNOqv1Dqw
