@@ -46,9 +46,30 @@ class TournamentService {
             // maybe db throw other error instead
             throw error
         }
-        
-        
     }
+
+    async getAllTournaments() {
+        const result = await tourneyRepository.getAllTournaments()
+
+        return result
+    }
+
+    async getTournamentById(id) {
+        const tournamentId = Number(id)
+
+        if (!Number.isSafeInteger(tournamentId) || tournamentId <= 0) {
+            throw new Error("INVALID_TOURNAMENT_ID")
+        }
+
+        const tournament = await tourneyRepository.getTournamentById(id)
+
+        if (!tournament) {
+            throw new Error("NO_TOURNAMENT_FOUND")
+        }
+
+        return tournament
+    }
+
 }
 
 module.exports = new TournamentService()

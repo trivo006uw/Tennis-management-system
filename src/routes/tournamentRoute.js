@@ -8,4 +8,10 @@ router.post("/", authenticateToken, authorizeRole("admin", "organizer"), (req, r
     tournamentController.createTournament(req, res)
 })
 
+router.get("/", (req, res) => {
+    tournamentController.getAllTournaments(req, res)
+})
+
+router.get("/:id", tournamentController.getTournamentById)
+
 module.exports = router

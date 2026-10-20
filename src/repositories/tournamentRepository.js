@@ -25,6 +25,22 @@ class tournamentRepository {
         `, [title, location, start_date])
         return result.rows[0]
     }
+
+
+    async getAllTournaments() {
+        const result = await pool.query(`
+            SELECT * FROM tournaments
+        `)
+        return result.rows
+    }
+
+    async getTournamentById (id) {
+        const result = await pool.query(`
+            SELECT * FROM tournaments
+            WHERE id = $1;
+        `, [id])
+        return result.rows[0]
+    }
 }
     
 module.exports = new tournamentRepository

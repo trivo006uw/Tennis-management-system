@@ -49,5 +49,49 @@ class tournamentController {
             })
         }
     }
+
+    async getAllTournaments(req, res) {
+        try {
+            const tournaments = await tournamentService.getAllTournaments()
+            return res.status(200).json({
+                tournaments
+            })
+        } catch (error) {
+            // Handle errors
+            console.error(error)
+            return res.status(500).json({
+                message: "Internal Error"
+            })
+        }
+    }
+
+    async getTournamentById(req, res) {
+        try {
+            const id = req.params.id
+            const tournament = await tournamentService.getTournamentById(id)
+            return res.status(200).json({
+                tournament
+            })
+        } catch (error) {
+            // Handle errors
+            console.error(error)
+            
+            if (error.message === "INVALID_TOURNAMENT_ID") {
+                return res.status(400).json({
+                    message: "Invalid id"
+                })
+            }
+
+            if (error.message === "NO_TOURNAMENT_FOUND") {
+                return res.status(404).json({
+                    message: "No tournament found with id"
+                })
+            }
+
+            return res.status(500).json({
+                message: "Internal Error"
+            })
+        }
+    }
 }
 module.exports = new tournamentController()
