@@ -17,7 +17,7 @@ router.post("/login", (req, res) => {
 router.get("/me", authenticateToken, userController.getCurrentUser)
 
 router.get("/admin-test", authenticateToken,
-    authorizeRoles("admin"), (req, res) => {
+    authorizeRoles("admin", "organizer"), (req, res) => {
         return res.status(200).json({
             message: "Welcome, admin!",
             user: req.user
