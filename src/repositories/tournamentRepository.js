@@ -41,6 +41,29 @@ class tournamentRepository {
         `, [id])
         return result.rows[0]
     }
+
+    async updateTournament(id, newDetails) {
+        const {
+            title,
+            location,
+            start_date,
+            end_date,
+            max_players
+        } = newDetails;
+        const updatedTournament = await pool.query(`
+            UPDATE tournaments
+            SET 
+                title = COALESCE($1, title),
+                location = COALESCE($2, location),
+                start_date = COALESCE($3, start_date),
+                end_date = COALESCE($4, end_date),
+                max_players = COALESCE($5, max_players)
+            WHERE id = $6
+            RETURNING *;
+        `, [title, location, start_date, end_date, max_players, id])
+
+        return updatedTournament.rows[0]
+    }
 }
     
 module.exports = new tournamentRepository
