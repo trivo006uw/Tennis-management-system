@@ -54,6 +54,19 @@ class TournamentService {
         return result
     }
 
+    async getTournamentByid(id) {
+        const tournamentId = Number(id)
+
+        if (!Number.isSafeInteger(tournamentId) || tournamentId <= 0) {
+            throw new Error("INVALID_TOURNAMENT_ID")
+        }
+
+        const result = await tourneyRepository.getTournamentByid(tournamentId)
+
+        return result
+    }
+
+
     async updateTournament(id, user_id, role, newDetails) {
         
         const tournamentId = Number(id)
