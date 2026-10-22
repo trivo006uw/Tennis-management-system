@@ -27,14 +27,11 @@ class TournamentService {
             throw new Error("INVALID_MAX_PLAYER_RANGE")
         }
 
-        const existingTourney = await tourneyRepository.findDuplicate(title, location, start_date)
-
-        if (existingTourney) {
-            throw new Error("TOURNAMENT_ALREADY_EXISTS")
-        }
 
         try {
-            const tourney = await tourneyRepository.createTournament(created_by_user_id, title, location, start_date, end_date, max_players)
+            const tourney = await tourneyRepository.createTournament(created_by_user_id, 
+                                                                title, location, start_date,
+                                                                 end_date, max_players)
             return tourney
         } catch (error) {
             console.error(error)
@@ -89,12 +86,22 @@ class TournamentService {
             throw new Error("FORBIDDEN");
         }
 
-        const validatedDetails = this.validateFields(newDetails, tournament);
-        const updatedTournament = await tourneyRepository.updateTournament(
-            tournamentId,
-            validatedDetails
-        );
+        try {
+            const validatedDetails = this.validateFields(newDetails, tournament);
+            const updatedTournament = await tourneyRepository.updateTournament(
+                tournamentId,
+                validatedDetails
+            );
+        } catch (error) {
+             if (
+                error.code === "23505" &&
+                error.constraint === "unique_tournament_identity"
+            ) {
+                throw new Error("TOURNAMENT_ALREADY_EXISTS");
+            }
 
+            throw error;
+        }
         return updatedTournament;
     }
 
