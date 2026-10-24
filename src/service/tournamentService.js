@@ -91,7 +91,9 @@ class TournamentService {
             const updatedTournament = await tourneyRepository.updateTournament(
                 tournamentId,
                 validatedDetails
-            );
+            )
+            return updatedTournament;
+
         } catch (error) {
              if (
                 error.code === "23505" &&
@@ -99,10 +101,8 @@ class TournamentService {
             ) {
                 throw new Error("TOURNAMENT_ALREADY_EXISTS");
             }
-
             throw error;
         }
-        return updatedTournament;
     }
 
     validateFields(newDetails, tournament) {

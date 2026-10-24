@@ -93,5 +93,56 @@ class tournamentController {
             })
         }
     }
+
+    async updateTournament(req, res) {
+        try {
+            // get id
+            const id = req.params.id
+
+            // get userId and role
+            const user_id = req.user.userId
+            const role = req.user.role
+
+            // get new details
+            const newDetails = req.body
+
+            const updatedTournament = await tournamentService.updateTournament(id, user_id, role, newDetails)
+            
+            return res.status(200).json({
+                updatedTournament
+            })
+        } catch (error) {
+            console.error(error)
+
+            if (error.message === "INVALID_TOURNAMENT_ID") {
+                return res.status(400).json({
+                    message: "Invalid Tournament Id"
+                })
+            }
+
+            if (error.message === "TOURNAMENT_NOT_FOUND") {
+                return res.status(404).json({
+                    message: "Tournament Not Found"
+                })
+            }
+
+            if (error.message === "FORBIDDEN") {
+                return res.status(403).json({
+                    message: "No Access"
+                })
+            }
+
+            if (error.message === "TOURNAMENT_ALREADY_EXISTS") {
+                return res.status(409).json({
+                    message: "Tournament already exist"
+                })
+            }
+
+            return res.status(500).json({
+                message: "Internal Error"
+            })
+
+        }
+    }
 }
 module.exports = new tournamentController()
