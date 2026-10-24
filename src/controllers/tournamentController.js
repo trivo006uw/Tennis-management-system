@@ -113,10 +113,17 @@ class tournamentController {
             })
         } catch (error) {
             console.error(error)
-
-            if (error.message === "INVALID_TOURNAMENT_ID") {
+            const validationErrors = [
+                "INVALID_UPDATE_FIELDS",
+                "INVALID_TITLE",
+                "INVALID_LOCATION",
+                "INVALID_DATE_RANGE",
+                "INVALID_MAX_PLAYER_RANGE"
+            ];
+            
+            if (validationErrors.includes(error.message)) {
                 return res.status(400).json({
-                    message: "Invalid Tournament Id"
+                    message: error.message
                 })
             }
 

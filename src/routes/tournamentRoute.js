@@ -14,4 +14,8 @@ router.get("/", (req, res) => {
 
 router.get("/:id", tournamentController.getTournamentById)
 
+router.patch("/:id", authenticateToken, authorizeRole("admin", "organizer"), (req, res) => {
+    tournamentController.updateTournament(req, res)
+})
+
 module.exports = router
