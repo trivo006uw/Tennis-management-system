@@ -51,14 +51,18 @@ class TournamentService {
         return result
     }
 
-    async getTournamentByid(id) {
+    async getTournamentById(id) {
         const tournamentId = Number(id)
 
         if (!Number.isSafeInteger(tournamentId) || tournamentId <= 0) {
             throw new Error("INVALID_TOURNAMENT_ID")
         }
 
-        const result = await tourneyRepository.getTournamentByid(tournamentId)
+        const result = await tourneyRepository.getTournamentById(tournamentId)
+
+        if (!result) {
+            throw new Error("TOURNAMENT_DOES_NOT_EXIST")
+        }
 
         return result
     }

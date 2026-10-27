@@ -82,7 +82,7 @@ class tournamentController {
                 })
             }
 
-            if (error.message === "NO_TOURNAMENT_FOUND") {
+            if (error.message === "TOURNAMENT_DOES_NOT_EXIST") {
                 return res.status(404).json({
                     message: "No tournament found with id"
                 })

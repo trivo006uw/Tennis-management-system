@@ -64,6 +64,15 @@ class tournamentRepository {
 
         return updatedTournament.rows[0]
     }
+
+    async deleteTournament(id) {
+        const result = await pool.query(`
+            DELETE FROM tournaments
+            WHERE id = $1
+            RETURNING *;
+        `, [id])
+        return result.rows[0]
+    }
 }
     
 module.exports = new tournamentRepository
