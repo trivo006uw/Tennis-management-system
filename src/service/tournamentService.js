@@ -186,6 +186,32 @@ class TournamentService {
         }
         return newDetails;
     }
+
+    async deleteTournament(id, user_id, role) {
+        const tournamentId = Number(id)
+
+        if (!Number.isSafeInteger(tournamentId) || tournamentId <= 0) {
+            throw new Error("INVALID_TOURNAMENT_ID")
+        }
+
+
+        const tournament = await tourneyRepository.getTournamentById(tournamentId)
+        if (!tournament) {
+            throw new Error("TOURNAMENT_NOT_FOUND")
+        }
+        const created_by = tournament.created_by_user_id
+        
+        if (
+            role !== "admin" &&
+            !(role === "organizer" && Number(user_id) === Number(created_by))
+        ) {
+            throw new Error("FORBIDDEN");
+        }
+
+       
+        const deletedTournament = await tourneyRepository.deleteTournament(tournamentId)
+        return deletedTournament
+    }
 }
 
 module.exports = new TournamentService()

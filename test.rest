@@ -110,3 +110,10 @@ Content-Type: application/json
 {
     "max_players": -5
 }
+
+
+###
+DELETE http://localhost:3000/tournaments/2
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjgsInJvbGUiOiJvcmdhbml6ZXIiLCJpYXQiOjE3OTMxMjM4NDAsImV4cCI6MTc5MzEzMTA0MH0.ZyW2TkOToJF4v5A-UfHjhIG3irIlNreJEgfz7w1dx2A
+Content-Type: application/json
+

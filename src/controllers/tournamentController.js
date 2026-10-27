@@ -151,5 +151,41 @@ class tournamentController {
 
         }
     }
+
+    async deleteTournament(req, res) {
+        try {
+            const id = req.params.id
+
+            const user_id = req.user.userId
+            const role = req.user.role
+
+            const deletedTournament = await tournamentService.deleteTournament(id, user_id, role)
+            return res.status(200).json(deletedTournament)
+
+        } catch (error) {
+            console.error(error)
+            if (error.message === "INVALID_TOURNAMENT_ID") {
+                return res.status(400).json({
+                    message: "Invalid Id"
+                })
+            }
+
+            if (error.message === "TOURNAMENT_NOT_FOUND") {
+                return res.status(404).json({
+                    message: "Tournament not found"
+                })
+            }
+
+            if (error.message === "FORBIDDEN") {
+                return res.status(403).json({
+                    message: "No Access"
+                })
+            }
+
+            return res.status(500).json({
+                message: "Internal Error"
+            })
+        }
+    }
 }
 module.exports = new tournamentController()

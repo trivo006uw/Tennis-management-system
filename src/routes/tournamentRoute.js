@@ -18,4 +18,7 @@ router.patch("/:id", authenticateToken, authorizeRole("admin", "organizer"), (re
     tournamentController.updateTournament(req, res)
 })
 
+router.delete("/:id", authenticateToken, authorizeRole("admin", "organizer"), (req, res) => {
+    tournamentController.deleteTournament(req, res)
+})
 module.exports = router
