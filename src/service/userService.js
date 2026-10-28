@@ -5,10 +5,37 @@ class userService {
 
     // Create user
     async registerUser(name, username, email, password) {
+        // Validate all fields
+        if (
+            typeof name !== "string" ||
+            typeof username !== "string" ||
+            typeof email !== "string" ||
+            typeof password !== "string"
+        ) {
+            throw new Error("INVALID_INPUT");
+        }
+
+        name = name.trim();
+        username = username.trim();
+        email = email.trim().toLowerCase();
+
         if (!name || !username || !email || !password) {
             throw new Error("MISSING_REQUIRED_FIELDS");
         }
 
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            throw new Error("INVALID_EMAIL");
+        }
+
+        if (username.length < 3 || username.length > 30) {
+            throw new Error("INVALID_USERNAME");
+        }
+
+        if (password.length < 8) {
+            throw new Error("WEAK_PASSWORD");
+        }
+
+        //Basic check for dup
         const existingEmail = await userRepository.getUserByEmail(email)
         if (existingEmail) {
             throw new Error("EMAIL_ALREADY_EXIST")
@@ -19,16 +46,33 @@ class userService {
             throw new Error("USERNAME_ALREADY_EXIST")
         }
 
+        //Test password
         const passHash = await bcrypt.hash(password, 10)
-    
+        
+        //Test for DB duplicate or other DB error
+        try {
+            const user = await userRepository.createUser(
+                name, username, email, passHash, 'player'
+            )
+            return user
+        } catch (error) {
+            if (error.code === "23505") {
+                throw new Error("USER_ALREADY_EXIST");
+            }
 
-        const user = await userRepository.createUser(
-            name, username, email, passHash, 'player'
-        )
-        return user
+            throw error;
+        }
+
     }
 
     async loginUser(email, password) {
+        //Validate All fields
+        if (typeof email !== "string" || typeof password !== "string") {
+            throw new Error("INVALID_CREDENTIALS");
+        }
+
+        email = email.trim().toLowerCase();
+        password = password.trim()
         if (!email || !password) {
             throw new Error("MISSING_REQUIRED_FIELDS")
         }
@@ -38,19 +82,19 @@ class userService {
             throw new Error("INVALID_CREDENTIALS")
         }
         
-
+        
+        //Matching Password
         const isMatch = await bcrypt.compare(
             password,
             user.password_hash
         )
-
-
         if (!isMatch) {
             throw new Error("INVALID_CREDENTIALS");
         }
 
+        //Create jwt token
         const token = jwt.sign(
-            {   userId: user.id,
+            {   user_id: user.id,
                 role: user.role
             },
             process.env.JWT_SECRET,
@@ -71,11 +115,17 @@ class userService {
 
 
     async getCurrentUser(userId) {
-        const user = await userRepository.getUserByID(userId)
+        //Validate all fields
+        const id = Number(userId);
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            throw new Error("INVALID_USER_ID");
+        }
 
+        const user = await userRepository.getUserByID(id)
         if (!user) {
             throw new Error("USER_NOT_FOUND")
         }
+
         return {
             id: user.id,
             name: user.name,

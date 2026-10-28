@@ -4,7 +4,7 @@ class userRepository {
     // Get user with id
     async getUserByID (user_id) {
         const result = await pool.query(
-            "SELECT * FROM users WHERE id = $1;",
+            "SELECT id, name, username, email, role, created_at FROM users WHERE id = $1;",
             [user_id]
         );
 
@@ -32,7 +32,7 @@ class userRepository {
     // get user by email to chcek for dup
     async getUserByEmail (email) {
         const result = await pool.query(
-            `SELECT * FROM users WHERE email = $1;`,
+            `SELECT id, name, username, email, password_hash, role FROM users WHERE email = $1;`,
             [email]
         )
         return result.rows[0];
