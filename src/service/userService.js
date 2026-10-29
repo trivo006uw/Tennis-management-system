@@ -7,6 +7,15 @@ class userService {
     async registerUser(name, username, email, password) {
         // Validate all fields
         if (
+            name == null ||
+            username == null ||
+            email == null ||
+            password == null
+        ) {
+            throw new Error("MISSING_REQUIRED_FIELDS");
+        }
+
+        if (
             typeof name !== "string" ||
             typeof username !== "string" ||
             typeof email !== "string" ||
@@ -18,7 +27,6 @@ class userService {
         name = name.trim();
         username = username.trim();
         email = email.trim().toLowerCase();
-
         if (!name || !username || !email || !password) {
             throw new Error("MISSING_REQUIRED_FIELDS");
         }

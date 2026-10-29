@@ -109,6 +109,80 @@ describe("Post user/register", () =>{
         );
     });
 
+
+    test("Should reject an invalid email", async () => {
+        // Arrange + Act
+        const response = await request(app)
+            .post("/users/register")
+            .send({
+                ...testUser,
+                email: "notanemail"
+            });
+
+        // Assert
+        expect(response.status).toBe(400);
+        expect(response.body.message).toBe("Invalid email format");
+    });
+
+
+    test("Should reject a weak password", async () => {
+        const response = await request(app)
+            .post("/users/register")
+            .send({
+                ...testUser,
+                password: "123"
+            });
+
+        expect(response.status).toBe(400);
+        expect(response.body.message).toBe(
+            "Password must be at least 8 characters"
+        );
+    });
+
+
+    test("Should reject an invalid username", async () => {
+        const response = await request(app)
+            .post("/users/register")
+            .send({
+                ...testUser,
+                username: "ab"
+            });
+
+        expect(response.status).toBe(400);
+        expect(response.body.message).toBe(
+            "Username must be 3-30 characters"
+        );
+    });
+
+
+    test("Should reject missing required fields", async () => {
+        const { email, ...incompleteUser } = testUser;
+
+        const response = await request(app)
+            .post("/users/register")
+            .send(incompleteUser);
+
+        expect(response.status).toBe(400);
+        expect(response.body.message).toBe(
+            "All fields are required"
+        );
+    });
+    
+
+    test("Should reject invalid input types", async () => {
+        const response = await request(app)
+            .post("/users/register")
+            .send({
+                ...testUser,
+                username: 12345
+            });
+
+        expect(response.status).toBe(400);
+        expect(response.body.message).toBe(
+            "Invalid input types"
+        );
+    });
+
      // Clean up after the suite
     afterAll(async () => {
         await pool.query(
