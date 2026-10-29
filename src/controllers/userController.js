@@ -78,7 +78,9 @@ class userController {
             
             const user = await userService.loginUser(email, password)
 
-            return res.status(200).json(user)
+            return res.status(200).json({
+                user
+            })
 
         } catch (error) {
             console.log(error)

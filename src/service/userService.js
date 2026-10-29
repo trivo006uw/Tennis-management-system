@@ -75,6 +75,12 @@ class userService {
 
     async loginUser(email, password) {
         //Validate All fields
+        if (email == null ||
+            password == null) {
+
+            throw new Error("MISSING_REQUIRED_FIELDS")
+        }
+
         if (typeof email !== "string" || typeof password !== "string") {
             throw new Error("INVALID_CREDENTIALS");
         }

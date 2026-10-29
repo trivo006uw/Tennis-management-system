@@ -167,7 +167,7 @@ describe("Post user/register", () =>{
             "All fields are required"
         );
     });
-    
+
 
     test("Should reject invalid input types", async () => {
         const response = await request(app)
@@ -189,7 +189,96 @@ describe("Post user/register", () =>{
             "DELETE FROM users WHERE email = $1 OR username = $2",
             [testEmail, testUser]
         );
-
-        await pool.end();
     });
 })
+
+
+describe("Get users/login", () => {
+    const loginUser = {
+        name: "Login Test User",
+        username: "loginTestUser",
+        email: "login-test@gmail.com",
+        password: "Password123!"
+    };
+
+     beforeAll(async () => {
+        // Confirm the actual database before making changes
+        const result = await pool.query(
+            "SELECT current_database() AS name"
+        );
+
+        if (result.rows[0].name !== "tennis_test") {
+            throw new Error("Wrong test database");
+        }
+    });
+
+
+    beforeEach(async () => {
+        // Remove the previous fixture
+        await pool.query(
+            `DELETE FROM users
+             WHERE email = $1 AND username = $2`,
+            [loginUser.email, loginUser.username]
+        );
+
+        // Arrange: Create a user for this test
+        await request(app)
+            .post("/users/register")
+            .send(loginUser)
+            .expect(201);
+    })
+
+    test("Should login with valid credential", async () => {
+        const response = await request(app)
+        .post("/users/login")
+        .send({
+            email: "login-test@gmail.com",
+            password: "Password123!"
+        })
+
+        expect(response.statusCode).toBe(200)
+
+        // Login should return a JWT
+        expect(response.body.user).toHaveProperty("token");
+        expect(typeof response.body.user.token).toBe("string");
+
+        // Confirm returned user information
+        expect(response.body.user.email).toBe(loginUser.email);
+        expect(response.body.user.role).toBe("player");
+        expect(response.body.user).not.toHaveProperty("password_hash");
+    })
+
+    test("Should reject nonexistent email", async () => {
+        const response = await request(app)
+            .post("/users/login")
+            .send({
+                email: "unknown-test@gmail.com",
+                password: "Password123!"
+            });
+
+        expect(response.status).toBe(401);
+    });
+
+    test("Should reject missing password", async () => {
+        const response = await request(app)
+            .post("/users/login")
+            .send({
+                email: loginUser.email
+            });
+
+        expect(response.status).toBe(400);
+    });
+
+    afterAll(async () => {
+        await pool.query(
+            `DELETE FROM users
+             WHERE email = $1 AND username = $2`,
+            [loginUser.email, loginUser.username]
+        );
+    });
+})
+
+//Final close
+afterAll(async () => {
+    await pool.end();
+});
