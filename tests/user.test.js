@@ -2,6 +2,7 @@
 const request = require("supertest");
 const app = require("../src/app")
 const pool = require("../config/db")
+const jwt = require("jsonwebtoken")
 
 describe("Post user/register", () =>{
     const testEmail = "integration-test@gmail.com";
@@ -193,7 +194,7 @@ describe("Post user/register", () =>{
 })
 
 
-describe("Get users/login", () => {
+describe("POST users/login", () => {
     const loginUser = {
         name: "Login Test User",
         username: "loginTestUser",
@@ -246,7 +247,32 @@ describe("Get users/login", () => {
         expect(response.body.user.email).toBe(loginUser.email);
         expect(response.body.user.role).toBe("player");
         expect(response.body.user).not.toHaveProperty("password_hash");
+
+        const decoded = jwt.verify(
+            response.body.user.token,
+            process.env.JWT_SECRET,
+            { algorithms: ["HS256"] }
+        );
+
+        expect(Number(decoded.user_id)).toBe(response.body.user.id);
+        expect(decoded.role).toBe("player");
+        expect(decoded.exp).toBeGreaterThan(decoded.iat);
     })
+
+
+    test("Should reject incorrect password", async () => {
+        const response = await request(app)
+            .post("/users/login")
+            .send({
+                email: loginUser.email,
+                password: "WrongPassword123!"
+            });
+
+        expect(response.status).toBe(401);
+        expect(response.body.message).toBe("invalid credentials");
+        expect(response.body).not.toHaveProperty("token");
+    });
+
 
     test("Should reject nonexistent email", async () => {
         const response = await request(app)
@@ -277,6 +303,152 @@ describe("Get users/login", () => {
         );
     });
 })
+
+
+describe("GET /users/me", () => {
+    const authUser = {
+        name: "Auth Test User",
+        username: "authTestUser",
+        email: "auth-test@gmail.com",
+        password: "Password123!"
+    };
+
+    beforeAll(async () => {
+        const result = await pool.query(
+            "SELECT current_database() AS name"
+        );
+
+        if (result.rows[0].name !== "tennis_test") {
+            throw new Error("Wrong test database");
+        }
+    });
+
+    beforeEach(async () => {
+        // Remove previous test user
+        await pool.query(
+            `DELETE FROM users
+             WHERE email = $1 OR username = $2`,
+            [authUser.email, authUser.username]
+        );
+
+        // Create a fresh test user
+        await request(app)
+            .post("/users/register")
+            .send(authUser)
+            .expect(201);
+    });
+
+    test("Should retrieve authenticated user", async () => {
+        // Step 1: Login
+        const loginResponse = await request(app)
+            .post("/users/login")
+            .send({
+                email: authUser.email,
+                password: authUser.password
+            })
+            .expect(200);
+
+        // Your login response nests the token under user
+        const token = loginResponse.body.user.token;
+
+        // Step 2: Access protected endpoint
+        const response = await request(app)
+            .get("/users/me")
+            .set("Authorization", `Bearer ${token}`);
+
+        // Step 3: Verify response
+        expect(response.status).toBe(200);
+        expect(response.body.user.username).toBe(authUser.username);
+        expect(response.body.user.role).toBe("player");
+
+        // Ensure sensitive information isn't exposed
+        expect(response.body.user).not.toHaveProperty("password_hash");
+    });
+
+
+    test("Should reject request without JWT", async () => {
+        const response = await request(app)
+            .get("/users/me");
+
+        expect(response.status).toBe(401);
+    });
+
+
+    test("Should reject invalid JWT", async () => {
+        const response = await request(app)
+            .get("/users/me")
+            .set("Authorization", "Bearer invalid-token");
+
+        expect(response.status).toBe(401);
+    });
+
+
+    test("Should reject expired JWT", async () => {
+        const expiredToken = jwt.sign(
+            {
+                user_id: 1,
+                role: "player"
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: -10 }
+        );
+
+        const response = await request(app)
+            .get("/users/me")
+            .set("Authorization", `Bearer ${expiredToken}`);
+
+        expect(response.status).toBe(401);
+    });
+
+
+    test("Should reject incorrect Authorization scheme", async () => {
+        // Generate a valid token with correct credentials
+        const loginResponse = await request(app)
+            .post("/users/login")
+            .send({
+                email: authUser.email,
+                password: authUser.password
+            })
+            .expect(200);
+
+        const token = loginResponse.body.user.token;
+
+        // Send valid token with incorrect scheme
+        const response = await request(app)
+            .get("/users/me")
+            .set("Authorization", `Basic ${token}`);
+
+        expect(response.status).toBe(401);
+    });
+
+
+    test("Should reject JWT with invalid role", async () => {
+        const invalidRoleToken = jwt.sign(
+            {
+                user_id: 1,
+                role: "superuser"
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: "2h" }
+        );
+
+        const response = await request(app)
+            .get("/users/me")
+            .set("Authorization", `Bearer ${invalidRoleToken}`);
+
+        expect(response.status).toBe(401);
+        expect(response.body.message).toBe("Invalid token payload");
+    });
+
+
+    afterAll(async () => {
+        await pool.query(
+            `DELETE FROM users
+             WHERE email = $1 OR username = $2`,
+            [authUser.email, authUser.username]
+        );
+    });
+});
 
 //Final close
 afterAll(async () => {
