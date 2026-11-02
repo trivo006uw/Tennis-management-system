@@ -595,6 +595,48 @@ describe("/PATCH tournament", () => {
 
         expect(result.rows[0].max_players).toBe(tournament.max_players);
     });
+
+
+    test("Should reject PATCH that creates duplicate tournament", async () => {
+        // Tournament A already exists from beforeEach()
+
+        // Create B with the same location and start date as A
+        const secondTournament = await createTournament(
+            organizer.id,
+            {
+                title: "Another Tennis Tournament",
+                location: tournament.location,
+                start_date: tournament.start_date,
+                end_date: tournament.end_date
+            }
+        );
+
+        // Confirm the database fixtures share the same start date
+        expect(
+            new Date(secondTournament.start_date).getTime()
+        ).toBe(
+            new Date(tournament.start_date).getTime()
+        );
+
+        // Attempt to give B the same title as A
+        const response = await request(app)
+            .patch(`/tournaments/${secondTournament.id}`)
+            .set("Authorization", `Bearer ${token}`)
+            .send({
+                title: tournament.title
+            });
+
+        expect(response.status).toBe(409);
+
+        // Ensure B was not changed
+        const result = await pool.query(
+            "SELECT * FROM tournaments WHERE id = $1",
+            [secondTournament.id]
+        );
+
+        expect(result.rows).toHaveLength(1);
+        expect(result.rows[0].title).toBe(secondTournament.title);
+    });
 })
 
 
