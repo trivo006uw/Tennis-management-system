@@ -335,10 +335,13 @@ describe("/PATCH tournament", () => {
     let organizer;
     let tournament;
     let token;
+    let extraUsers = [];
 
+    //Set up by creating an organizer and tournament
     beforeEach(async () => {
         organizer = undefined;
         tournament = undefined;
+        extraUsers = [];
 
         organizer = await createTestUser({
             role: "organizer"
@@ -352,16 +355,21 @@ describe("/PATCH tournament", () => {
     });
 
     afterEach(async () => {
-        if (organizer?.id != null) {
-            await pool.query(
-                `DELETE FROM tournaments
-                 WHERE created_by_user_id = $1`,
-                [organizer.id]
-            );
+        const users = [organizer, ...extraUsers]
+            .filter(user => user?.id != null);
 
+        for (const user of users) {
+            await pool.query(
+                "DELETE FROM tournaments WHERE created_by_user_id = $1",
+                [user.id]
+            );
+        }
+
+        // Then delete users
+        for (const user of users) {
             await pool.query(
                 "DELETE FROM users WHERE id = $1",
-                [organizer.id]
+                [user.id]
             );
         }
     });
@@ -397,6 +405,125 @@ describe("/PATCH tournament", () => {
         expect(result.rows[0].location).toBe(tournament.location);
     });
 
+
+    test("Should reject organizer updating another", async () => {
+        const otherOrganizer = await createTestUser({
+            role: "organizer"
+        })
+        
+        const otherOrgToken = createTestToken(otherOrganizer)
+        extraUsers.push(otherOrganizer)
+
+        const updates = {
+            title: "Unauthorized Tournament Update"
+        };
+
+        const response = await request(app)
+            .patch(`/tournaments/${tournament.id}`)
+            .set("Authorization", `Bearer ${otherOrgToken}`)
+            .send(updates)
+
+        expect(response.status).toBe(403)
+        const result = await pool.query(
+            "SELECT * FROM tournaments WHERE id = $1",
+            [tournament.id]
+        );
+
+        expect(result.rows).toHaveLength(1);
+        expect(result.rows[0].title).toBe(tournament.title);
+        expect(result.rows[0].created_by_user_id).toBe(organizer.id);
+    })
+
+
+    test("Should allow admin to update any tournament", async () => {
+        const admin = await createTestUser({
+            role: "admin"
+        });
+
+        extraUsers.push(admin);
+
+        const adminToken = createTestToken(admin);
+
+        const updates = {
+            title: "Admin Updated Tournament"
+        };
+
+        const response = await request(app)
+            .patch(`/tournaments/${tournament.id}`)
+            .set("Authorization", `Bearer ${adminToken}`)
+            .send(updates);
+
+        expect(response.status).toBe(200);
+
+        const result = await pool.query(
+            "SELECT * FROM tournaments WHERE id = $1",
+            [tournament.id]
+        );
+
+        expect(result.rows[0].title).toBe(updates.title);
+        expect(result.rows[0].created_by_user_id).toBe(organizer.id);
+    })
+
+
+    test("Should reject player updating tournament", async () => {
+        const player = await createTestUser({
+            role: "player"
+        })
+        
+        const playerToken = createTestToken(player)
+        extraUsers.push(player)
+
+        const updates = {
+            title: "Unauthorized player Update"
+        };
+
+        const response = await request(app)
+            .patch(`/tournaments/${tournament.id}`)
+            .set("Authorization", `Bearer ${playerToken}`)
+            .send(updates)
+
+        expect(response.status).toBe(403)
+        const result = await pool.query(
+            "SELECT * FROM tournaments WHERE id = $1",
+            [tournament.id]
+        );
+
+        expect(result.rows).toHaveLength(1);
+        expect(result.rows[0].title).toBe(tournament.title);
+        expect(result.rows[0].created_by_user_id).toBe(organizer.id);
+    })
+
+
+    test("Should reject invalid tournament ID", async () => {
+        const updates = {
+            title: "Updated Tournament"
+        };
+
+        const response = await request(app)
+            .patch("/tournaments/abc")
+            .set("Authorization", `Bearer ${token}`)
+            .send(updates);
+
+        expect(response.status).toBe(400);
+    });
+
+
+    test("Should return 404 for nonexistent tournament", async () => {
+        const result = await pool.query(
+            "SELECT COALESCE(MAX(id), 0) + 1 AS missing_id FROM tournaments"
+        );
+
+        const missingId = Number(result.rows[0].missing_id);
+
+        const response = await request(app)
+            .patch(`/tournaments/${missingId}`)
+            .set("Authorization", `Bearer ${token}`)
+            .send({
+                title: "Updated Tournament"
+            });
+
+        expect(response.status).toBe(404);
+    });
 })
 
 
