@@ -5,12 +5,12 @@ class tournamentController {
     async createTournament(req, res) {
         try {
             const {title, location, start_date, end_date, max_players} = req.body
-            const user_id = req.user.userId
-            const tourney = await tournamentService.createTournament(user_id, title, location, start_date, end_date, max_players)
+            const user_id = req.user.user_id;
+            const tournament = await tournamentService.createTournament(user_id, title, location, start_date, end_date, max_players)
 
-            return res.status(201).json(
-                tourney
-            )
+            return res.status(201).json({
+                tournament
+            })
         } catch (error) {
             console.error.error
 
@@ -100,14 +100,12 @@ class tournamentController {
             const id = req.params.id
 
             // get userId and role
-            const user_id = req.user.userId
+            const user_id = req.user.user_id
             const role = req.user.role
 
             // get new details
             const newDetails = req.body
-
             const updatedTournament = await tournamentService.updateTournament(id, user_id, role, newDetails)
-            
             return res.status(200).json({
                 updatedTournament
             })
@@ -156,7 +154,7 @@ class tournamentController {
         try {
             const id = req.params.id
 
-            const user_id = req.user.userId
+            const user_id = req.user.user_id
             const role = req.user.role
 
             const deletedTournament = await tournamentService.deleteTournament(id, user_id, role)

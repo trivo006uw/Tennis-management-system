@@ -69,9 +69,7 @@ class TournamentService {
 
 
     async updateTournament(id, user_id, role, newDetails) {
-        
         const tournamentId = Number(id)
-
         if (!Number.isSafeInteger(tournamentId) || tournamentId <= 0) {
             throw new Error("INVALID_TOURNAMENT_ID")
         }
@@ -82,7 +80,6 @@ class TournamentService {
         }
 
         const created_by = tournament.created_by_user_id
-
         if (
             role !== "admin" &&
             !(role === "organizer" && Number(user_id) === Number(created_by))
