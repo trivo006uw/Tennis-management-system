@@ -524,6 +524,77 @@ describe("/PATCH tournament", () => {
 
         expect(response.status).toBe(404);
     });
+
+
+    test("Should reject unauthorized update fields", async () => {
+        // Arrange
+        const updates = {
+            created_by_user_id: 999
+        };
+
+        // Act
+        const response = await request(app)
+            .patch(`/tournaments/${tournament.id}`)
+            .set("Authorization", `Bearer ${token}`)
+            .send(updates);
+
+        // Assert
+        expect(response.status).toBe(400);
+
+        // Verify ownership has not changed
+        const result = await pool.query(
+            `SELECT created_by_user_id
+            FROM tournaments
+            WHERE id = $1`,
+            [tournament.id]
+        );
+
+        expect(result.rows).toHaveLength(1);
+        expect(result.rows[0].created_by_user_id).toBe(organizer.id);
+    });
+
+
+    test("Should reject empty tournament title", async () => {
+        const updates = {
+            title: ""
+        };
+
+        const response = await request(app)
+            .patch(`/tournaments/${tournament.id}`)
+            .set("Authorization", `Bearer ${token}`)
+            .send(updates);
+
+        expect(response.status).toBe(400);
+
+        // Confirm the original title remains unchanged
+        const result = await pool.query(
+            "SELECT title FROM tournaments WHERE id = $1",
+            [tournament.id]
+        );
+
+        expect(result.rows[0].title).toBe(tournament.title);
+    });
+
+
+    test("Should reject invalid max_players update", async () => {
+        const updates = {
+            max_players: -10
+        };
+
+        const response = await request(app)
+            .patch(`/tournaments/${tournament.id}`)
+            .set("Authorization", `Bearer ${token}`)
+            .send(updates);
+
+        expect(response.status).toBe(400);
+
+        const result = await pool.query(
+            "SELECT max_players FROM tournaments WHERE id = $1",
+            [tournament.id]
+        );
+
+        expect(result.rows[0].max_players).toBe(tournament.max_players);
+    });
 })
 
 
